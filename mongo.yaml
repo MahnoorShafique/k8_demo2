@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongodb-deployment
+  labels:
+    app: mongodb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongodb
+  template:
+    metadata:
+      labels:
+        app: mongodb
+    spec:
+      containers:
+      - name: mongodb
+        image: mongo
+        ports:
+        - containerPort: 27017
+        env:
+        - name: MONGO_INITDB_ROOT_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-secret
+              key: mongo-root-username
+        - name: MONGO_INITDB_ROOT_PASSWORD
+          valueFrom: 
+            secretKeyRef:
+              name: mongodb-secret
+              key: mongo-root-password
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb-service
+spec:
+  selector:
+    app: mongodb
+  ports:
+    - protocol: TCP
+      port: 27017
+      targetPort: 27017
+
+
+#to check if service is connected to right pod.
+# $kubectl get service
+# $kubectl describe service mongodb-service
+# Endpoints:         172.17.0.5:27017
+
+# verify ip is same as above or not:
+# kubectl get pod -o wide
+
+
+
+# accessing service through web browser.
+# mahnoor@mahnoor-Latitude-E5470:~/Documents/k8_demo2$ kubectl get service
+# NAME                    TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
+# kubernetes              ClusterIP      10.96.0.1       <none>        443/TCP          34m
+# mongo-express-service   LoadBalancer   10.104.72.137   <pending>     8081:30000/TCP   14s
+# mongodb-service         ClusterIP      10.101.78.164   <none>        27017/TCP        11m
+
+#you can see mongo-express-service has external ip as pending.
+#$minikube service mongo-express-service
+#above command will assign service an external Ip address.
